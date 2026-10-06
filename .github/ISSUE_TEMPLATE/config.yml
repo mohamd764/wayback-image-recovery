@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/mohamd764/wayback-image-recovery/blob/main/CONTRIBUTING.md
+    about: Setup, tests, and the expectation that CI never hits live archives.

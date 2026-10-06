@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement to the CLI or library
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The README roadmap lists a few tasks that are a good size for a first contribution (dry run, progress output, retry-errors, sitemap input, SQLite manifest, cheaper domain discovery). If yours matches one of those, say so and we can mark the issue `good first issue`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How should the command or the Python API behave?
+    validations:
+      required: true
+  - type: checkboxes
+    id: roadmap
+    attributes:
+      label: Roadmap
+      options:
+        - label: This matches an item in the README roadmap
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other tools or workarounds you considered.
+    validations:
+      required: false

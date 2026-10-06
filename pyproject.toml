@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wayback-image-recovery"
+version = "0.1.0"
+description = "Recover lost website images and other assets from the Wayback Machine and Common Crawl."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Mohamed Fouad" }]
+keywords = [
+    "wayback",
+    "internet-archive",
+    "common-crawl",
+    "cdx",
+    "image-recovery",
+    "warc",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Typing :: Typed",
+]
+dependencies = [
+    "aiohttp>=3.9.0,<4",
+    "Pillow>=10.0.1,<12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4,<9",
+    "ruff>=0.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/mohamd764/wayback-image-recovery"
+Repository = "https://github.com/mohamd764/wayback-image-recovery"
+Issues = "https://github.com/mohamd764/wayback-image-recovery/issues"
+Changelog = "https://github.com/mohamd764/wayback-image-recovery/blob/main/CHANGELOG.md"
+
+[project.scripts]
+wayback-image-recovery = "wayback_image_recovery.cli:main"
+wir = "wayback_image_recovery.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wayback_image_recovery"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/wayback_image_recovery",
+    "tests",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["wayback_image_recovery"]

@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in wayback-image-recovery failed or produced a wrong manifest row
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please do not paste credentials, private URL lists, or customer data. A redacted `https://example.com/...` URL is enough.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The wir or wayback-image-recovery command you ran.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `wir --version`.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Relevant manifest rows
+      description: Status, source, and error columns. Redact URLs if needed.
+    validations:
+      required: false
