@@ -220,6 +220,7 @@ def test_invalid_wayback_body_falls_through_to_common_crawl(tmp_path: Path) -> N
     assert report.summary == {
         "total": 1,
         "recovered": 1,
+        "would_recover": 0,
         "duplicate": 0,
         "skipped": 0,
         "not_found": 0,

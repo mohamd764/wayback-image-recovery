@@ -50,6 +50,7 @@ def test_recover_maps_options(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
         summary = {
             "total": 0,
             "recovered": 0,
+            "would_recover": 0,
             "duplicate": 0,
             "skipped": 0,
             "not_found": 0,
@@ -110,6 +111,7 @@ def test_strict_and_error_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: 
         summary = {
             "total": 1,
             "recovered": 0,
+            "would_recover": 0,
             "duplicate": 0,
             "skipped": 0,
             "not_found": 1 if status == "not_found" else 0,

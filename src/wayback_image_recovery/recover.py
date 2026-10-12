@@ -265,6 +265,13 @@ async def recover_one(
             continue
         if snapshot is None:
             continue
+        if config.dry_run:
+            return RecoveryRecord(
+                url=url,
+                source=snapshot.source,
+                timestamp=snapshot.timestamp,
+                status="would_recover",
+            )
         try:
             body = await fetch_snapshot(client, snapshot)
         except SnapshotNotFound:

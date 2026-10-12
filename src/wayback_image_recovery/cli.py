@@ -180,6 +180,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     recover.add_argument("--no-validate", action="store_true", help="Skip Pillow and HTML checks")
     recover.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Resolve snapshots and write the manifest without downloading bodies",
+    )
+    recover.add_argument(
         "--no-dedupe", action="store_true", help="Write a copy even when the hash exists"
     )
     recover.add_argument(
@@ -253,6 +258,7 @@ def config_from_args(args: argparse.Namespace) -> RecoveryConfig:
         "max_urls": args.max_urls,
         "page_size": args.page_size,
         "validate": not args.no_validate,
+        "dry_run": args.dry_run,
         "dedupe": not args.no_dedupe,
         "match_type": args.match_type,
         "cdx_endpoint": args.cdx_endpoint,

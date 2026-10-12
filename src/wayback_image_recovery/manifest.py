@@ -22,7 +22,15 @@ CSV_COLUMNS = (
     "mimetype",
     "error",
 )
-SUMMARY_KEYS = ("recovered", "duplicate", "skipped", "not_found", "invalid", "error")
+SUMMARY_KEYS = (
+    "recovered",
+    "would_recover",
+    "duplicate",
+    "skipped",
+    "not_found",
+    "invalid",
+    "error",
+)
 
 
 def summarize(records: list[RecoveryRecord]) -> dict[str, int]:
@@ -92,7 +100,8 @@ def record_from_dict(payload: dict[str, object]) -> RecoveryRecord:
 def format_summary(report: RecoveryReport) -> str:
     summary = report.summary
     counts = (
-        "recovered={recovered} duplicate={duplicate} skipped={skipped} "
+        "recovered={recovered} would_recover={would_recover} "
+        "duplicate={duplicate} skipped={skipped} "
         "not_found={not_found} invalid={invalid} error={error}"
     ).format(**summary)
     return "\n".join(
