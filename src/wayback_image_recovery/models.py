@@ -57,6 +57,7 @@ class RecoveryConfig:
     max_urls: int = 10_000
     page_size: int = 500
     validate: bool = True
+    dry_run: bool = False
     dedupe: bool = True
     match_type: str | None = None
     cdx_endpoint: str = CDX_ENDPOINT

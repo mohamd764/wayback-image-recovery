@@ -51,6 +51,9 @@ wir recover --csv broken-images.csv --min-bytes 2048
 
 # Stdin. Re-running the same command skips files already on disk.
 cat urls.txt | wir recover - --output ./recovered
+
+# See what would be downloaded without fetching any bytes.
+wir recover urls.txt --dry-run --output ./recovered
 ```
 
 After a run, `./recovered` contains the files plus:
@@ -65,7 +68,7 @@ CSV columns: `url`, `source`, `timestamp` (the snapshot time), `status`, `sha256
 
 ```text
 Processed 4 URL(s)
-recovered=2 duplicate=1 skipped=0 not_found=1 invalid=0 error=0
+recovered=2 would_recover=0 duplicate=1 skipped=0 not_found=1 invalid=0 error=0
 Manifest: recovered/manifest.csv
 Report: recovered/manifest.json
 ```
@@ -140,6 +143,7 @@ Images are opened with Pillow (`verify`, then `load`). SVG is accepted as XML. A
 | Status | Meaning |
 | --- | --- |
 | `recovered` | Bytes saved for this URL |
+| `would_recover` | `--dry-run` only: a capture was found but nothing was downloaded |
 | `duplicate` | Same sha256 already stored; `path` points at that file |
 | `skipped` | A previous run already saved this URL and the file is still there |
 | `not_found` | No matching Wayback or Common Crawl capture |
@@ -197,7 +201,6 @@ Please read the [Internet Archive Terms of Use](https://archive.org/about/terms.
 
 These are intentionally small and labeled for a `good first issue`:
 
-- `--dry-run` that resolves snapshots and writes the manifest without downloading bodies.
 - An optional progress bar and ETA.
 - `--retry-errors` to reprocess only rows whose latest status is `error`.
 - Sitemap XML as an input.
