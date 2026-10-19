@@ -129,7 +129,9 @@ def test_recover_from_csv_reads_manifest(tmp_path: Path) -> None:
     urls = read_broken_image_csv(CSV_FILE)
     assert urls[0] == "https://example.com/images/logo.png"
     bodies = {urls[0]: png_bytes()}
-    summary = recover_from_csv(client=archive_client(bodies), output_dir=tmp_path, csv_path=CSV_FILE)
+    summary = recover_from_csv(
+        client=archive_client(bodies), output_dir=tmp_path, csv_path=CSV_FILE
+    )
     assert summary["recovered"] == 1
     assert summary["not_found"] == len(urls) - 1
     assert summary["error"] == 0
