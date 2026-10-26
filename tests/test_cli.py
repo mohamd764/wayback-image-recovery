@@ -19,6 +19,8 @@ def test_help_includes_examples(capsys: pytest.CaptureFixture[str]) -> None:
     assert "wir recover --domain example.com" in output
     assert "--closest" in output
     assert "--csv" in output
+    assert "--sitemap" in output
+    assert "page URLs are ignored" in output
     assert "id_" in output or "Common Crawl" in output
 
 

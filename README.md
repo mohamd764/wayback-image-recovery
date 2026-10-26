@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 
-Recover lost website images — or any other archived asset — from the [Internet Archive Wayback Machine](https://web.archive.org/) and [Common Crawl](https://commoncrawl.org/). Point it at a domain, a URL list, or a CSV of broken image links. It finds a real capture, downloads the original bytes, rejects HTML error pages and truncated files, and writes a manifest you can audit.
+Recover lost website images — or any other archived asset — from the [Internet Archive Wayback Machine](https://web.archive.org/) and [Common Crawl](https://commoncrawl.org/). Point it at a domain, a URL list, a CSV of broken image links, or a local sitemap. It finds a real capture, downloads the original bytes, rejects HTML error pages and truncated files, and writes a manifest you can audit.
 
 Author: [Mohamed Fouad](https://github.com/mohamd764).
 
@@ -42,6 +42,10 @@ python -m pip install -e ".[dev]"
 ```bash
 # Every image capture under a domain. Files keep the original host and path.
 wir recover --domain example.com --output ./recovered
+
+# A local sitemap. Image sitemaps use image:loc. Plain sitemaps keep image
+# paths only; page URLs are ignored. A sitemap index is not fetched.
+wir recover --sitemap old-sitemap.xml -o ./recovered
 
 # An explicit list, preferring the capture closest to a date.
 wir recover urls.txt --closest 2020-01-01 --output ./recovered
@@ -93,9 +97,11 @@ $ python -c "from PIL import Image; print(Image.open('recovered/example.com/imag
 
 ## How it works
 
+A local `--sitemap` file is read like a URL list. Every `image:loc` is kept. In a plain sitemap, a `loc` is kept only when its path looks like an image; page URLs are ignored. A sitemap index is an error that lists the child sitemap URLs, because nothing is fetched from the live site.
+
 ```mermaid
 flowchart TD
-  input[Input: domain, URL list, or CSV]
+  input[Input: domain, URL list, CSV, or sitemap]
   discover[Wayback CDX discovery]
   urls[Normalize URLs and drop duplicates]
   resume{Manifest file still on disk?}
@@ -200,7 +206,6 @@ These are intentionally small and labeled for a `good first issue`:
 - `--dry-run` that resolves snapshots and writes the manifest without downloading bodies.
 - An optional progress bar and ETA.
 - `--retry-errors` to reprocess only rows whose latest status is `error`.
-- Sitemap XML as an input.
 - An SQLite manifest for very large jobs.
 - Use the CDX latest-capture index during domain discovery so each URL does not need a second lookup.
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from wayback_image_recovery._version import __version__
 from wayback_image_recovery.errors import ArchiveError
-from wayback_image_recovery.inputs import read_csv_file, read_url_lines
+from wayback_image_recovery.inputs import read_csv_file, read_sitemap_file, read_url_lines
 from wayback_image_recovery.manifest import format_summary
 from wayback_image_recovery.models import (
     CC_COLLINFO_URL,
@@ -26,6 +26,7 @@ examples:
   wir recover --domain example.com -o ./recovered
   wir recover urls.txt --closest 2020-01-01 -o ./recovered
   wir recover --csv broken.csv --min-bytes 1024 --flat
+  wir recover --sitemap old-sitemap.xml -o ./recovered
   cat urls.txt | wir recover - -o ./recovered
 """.strip("\n")
 
@@ -43,6 +44,12 @@ examples:
   A CSV export of broken image URLs (a url, image, or src column is detected):
 
     wir recover --csv broken-images.csv --min-bytes 2048
+
+  A local sitemap. Image sitemaps contribute every image:loc. Plain sitemaps
+  keep loc URLs whose path looks like an image; page URLs are ignored. A
+  sitemap index is rejected and nothing is fetched:
+
+    wir recover --sitemap old-sitemap.xml -o ./recovered
 
   Read URLs from stdin and keep the original directory layout:
 
@@ -92,6 +99,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     recover.add_argument("--domain", help="Discover captures for this host or URL prefix")
     recover.add_argument("--csv", dest="csv_path", help="CSV file of asset URLs")
+    recover.add_argument(
+        "--sitemap",
+        dest="sitemap_path",
+        metavar="PATH",
+        help=(
+            "Local sitemap XML file. Every image:loc is kept; plain sitemaps "
+            "keep loc URLs whose path looks like an image (page URLs are ignored). "
+            "A sitemap index is an error and is not fetched"
+        ),
+    )
     recover.add_argument(
         "-o",
         "--output",
@@ -221,7 +238,7 @@ def command_recover(args: argparse.Namespace) -> int:
     urls = collect_urls(args)
     if not urls and not args.domain:
         print(
-            "Provide a URL file, --csv, --domain, or - for stdin.",
+            "Provide a URL file, --csv, --sitemap, --domain, or - for stdin.",
             file=sys.stderr,
         )
         return 2
@@ -266,6 +283,16 @@ def config_from_args(args: argparse.Namespace) -> RecoveryConfig:
 
 
 def collect_urls(args: argparse.Namespace) -> list[str]:
+    if args.sitemap_path and (args.urls_file or args.domain or args.csv_path):
+        raise ValueError("--sitemap cannot be combined with a URL file, --domain, or --csv")
+    if args.sitemap_path:
+        path = Path(args.sitemap_path)
+        if not path.is_file():
+            raise ValueError(f"sitemap file not found: {path}")
+        urls = read_sitemap_file(path)
+        if not urls:
+            raise ValueError("sitemap contains no image URLs; page URLs in <loc> are ignored")
+        return urls
     urls: list[str] = []
     if args.csv_path:
         path = Path(args.csv_path)

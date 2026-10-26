@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `wir recover --sitemap PATH` reads image URLs from a local sitemap XML file. Image sitemaps contribute every `image:loc`. Plain sitemaps contribute `loc` entries whose path looks like an image; page URLs are ignored. A sitemap index is rejected and its child sitemap URLs are listed; nothing is fetched from the web.
+
 ## [0.1.0] - 2026-10-06
 
 ### Added
