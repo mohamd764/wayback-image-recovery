@@ -1,13 +1,53 @@
-"""Read URL lists, CSV files, and domain queries."""
+"""Read URL lists, CSV files, sitemaps, and domain queries."""
 
 from __future__ import annotations
 
 import csv
 import io
+import mimetypes
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
+from xml.parsers import expat
 
+from wayback_image_recovery.matchers import mime_allowed
 from wayback_image_recovery.models import DomainQuery
+
+SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
+IMAGE_NS = "http://www.google.com/schemas/sitemap-image/1.1"
+_SITEMAP_LOC = f"{{{SITEMAP_NS}}}loc"
+_IMAGE_LOC = f"{{{IMAGE_NS}}}loc"
+_IMAGE_ELEMENT = f"{{{IMAGE_NS}}}image"
+
+# Suffixes this project already treats as images. ``mimetypes`` is consulted
+# first; this set covers types the standard table omits on older Pythons.
+_IMAGE_SUFFIXES = frozenset(
+    {
+        ".apng",
+        ".avif",
+        ".bmp",
+        ".gif",
+        ".heic",
+        ".heif",
+        ".ico",
+        ".jfif",
+        ".jp2",
+        ".jpe",
+        ".jpeg",
+        ".jpg",
+        ".jxl",
+        ".png",
+        ".svg",
+        ".svgz",
+        ".tif",
+        ".tiff",
+        ".webp",
+    }
+)
+
+_DTD_MESSAGE = (
+    "sitemap XML must not contain a DTD (external entities and entity expansion are disabled)"
+)
 
 _URL_COLUMNS = ("url", "uri", "image", "image_url", "src", "link", "original")
 _MATCH_TYPES = {"domain", "host", "prefix", "exact"}
@@ -65,6 +105,41 @@ def read_csv_urls(text: str) -> list[str]:
 
 def read_csv_file(path: Path) -> list[str]:
     return read_csv_urls(path.read_text(encoding="utf-8-sig"))
+
+
+def read_sitemap_file(path: Path) -> list[str]:
+    """Return image URLs from a local sitemap XML file."""
+    return read_sitemap_xml(path.read_bytes())
+
+
+def read_sitemap_xml(source: str | bytes) -> list[str]:
+    """Return image URLs from a sitemap document.
+
+    Image sitemaps contribute every ``image:loc``. Plain sitemaps contribute
+    ``loc`` values whose path looks like an image; page URLs are ignored.
+    A sitemap index raises ``ValueError`` listing the child sitemap URLs.
+    Nothing is fetched from the network.
+    """
+    data = source.encode("utf-8") if isinstance(source, str) else source
+    root = _parse_sitemap(data)
+    if _local_name(root.tag) == "sitemapindex":
+        raise ValueError(_sitemap_index_message(_loc_texts(root)))
+    return _collect_image_urls(root)
+
+
+def path_looks_like_image(url: str) -> bool:
+    """Return True when ``url``'s path looks like an image file.
+
+    The suffix is mapped with :mod:`mimetypes` and checked with the same
+    ``image/`` prefix rule as :func:`wayback_image_recovery.matchers.mime_allowed`.
+    """
+    candidate = url.strip()
+    if not candidate:
+        return False
+    guessed, _encoding = mimetypes.guess_type(candidate)
+    if guessed is not None and mime_allowed(guessed, ("image/",)):
+        return True
+    return Path(urlsplit(candidate).path).suffix.lower() in _IMAGE_SUFFIXES
 
 
 def parse_domain_query(value: str, match_type: str | None = None) -> DomainQuery:
@@ -132,3 +207,110 @@ def _header_index(header: list[str]) -> int | None:
 def _looks_like_url(value: str) -> bool:
     stripped = value.strip().lower()
     return stripped.startswith("http://") or stripped.startswith("https://")
+
+
+def _parse_sitemap(data: bytes) -> ET.Element:
+    """Parse sitemap bytes and refuse DTDs.
+
+    ``xml.etree.ElementTree`` expands internal entities, and its accelerated
+    parser does not expose the expat hooks needed to stop that. Parsing with
+    expat directly aborts on a DTD before an entity is expanded or an external
+    entity is fetched. The tree is still an ElementTree.
+    """
+    target = ET.TreeBuilder()
+    parser = expat.ParserCreate(None, "}")
+    parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
+    parser.buffer_text = 1
+    parser.ordered_attributes = 1
+    names: dict[str, str] = {}
+
+    def fixname(key: str) -> str:
+        name = names.get(key)
+        if name is None:
+            name = "{" + key if "}" in key else key
+            names[key] = name
+        return name
+
+    def start(tag: str, attr_list: list[str]) -> None:
+        attrib: dict[str, str] = {}
+        for index in range(0, len(attr_list), 2):
+            attrib[fixname(attr_list[index])] = attr_list[index + 1]
+        target.start(fixname(tag), attrib)
+
+    def reject_dtd(*_args: object) -> None:
+        raise ValueError(_DTD_MESSAGE)
+
+    parser.StartDoctypeDeclHandler = reject_dtd
+    parser.EntityDeclHandler = reject_dtd
+    parser.UnparsedEntityDeclHandler = reject_dtd
+    parser.ExternalEntityRefHandler = reject_dtd
+    parser.StartElementHandler = start
+    parser.EndElementHandler = lambda tag: target.end(fixname(tag))
+    parser.CharacterDataHandler = target.data
+    try:
+        parser.Parse(data, True)
+    except ValueError:
+        raise
+    except expat.ExpatError as exc:
+        raise ValueError(f"could not parse sitemap XML: {exc}") from exc
+    return target.close()
+
+
+def _collect_image_urls(root: ET.Element) -> list[str]:
+    parents = {child: parent for parent in root.iter() for child in list(parent)}
+    urls: list[str] = []
+    for elem in root.iter():
+        if not isinstance(elem.tag, str):
+            continue
+        text = _element_text(elem)
+        if not text:
+            continue
+        parent = parents.get(elem)
+        if _is_image_loc(elem, parent) or (_is_plain_loc(elem) and path_looks_like_image(text)):
+            urls.append(text)
+    return urls
+
+
+def _is_image_loc(elem: ET.Element, parent: ET.Element | None) -> bool:
+    if elem.tag == _IMAGE_LOC:
+        return True
+    if _local_name(elem.tag) != "loc" or parent is None:
+        return False
+    return parent.tag in {_IMAGE_ELEMENT, "image"}
+
+
+def _is_plain_loc(elem: ET.Element) -> bool:
+    return elem.tag in {_SITEMAP_LOC, "loc"}
+
+
+def _loc_texts(root: ET.Element) -> list[str]:
+    texts: list[str] = []
+    for elem in root.iter():
+        if isinstance(elem.tag, str) and _local_name(elem.tag) == "loc":
+            text = _element_text(elem)
+            if text:
+                texts.append(text)
+    return texts
+
+
+def _element_text(elem: ET.Element) -> str:
+    return (elem.text or "").strip()
+
+
+def _local_name(tag: str) -> str:
+    if tag.startswith("{") and "}" in tag:
+        return tag.rsplit("}", 1)[1]
+    return tag
+
+
+def _sitemap_index_message(child_urls: list[str]) -> str:
+    if child_urls:
+        listed = "\n".join(f"  {url}" for url in child_urls)
+    else:
+        listed = "  (no child sitemap URLs were listed)"
+    return (
+        "sitemap index files are not fetched; only a local sitemap is read, "
+        "and this tool does not crawl the live site. "
+        "Download one child sitemap and pass that file to --sitemap:\n"
+        f"{listed}"
+    )
