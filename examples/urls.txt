@@ -1,0 +1,3 @@
+# Placeholder URLs only. Replace these with assets you have the right to recover.
+https://example.com/images/logo.png
+https://example.com/images/header.png

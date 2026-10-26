@@ -170,6 +170,8 @@ asyncio.run(main())
 
 Useful `RecoveryConfig` fields: `concurrency`, `rate_per_second`, `max_retries`, `closest`, `mimetypes`, `status_codes`, `flat`, `resume`, `min_bytes`, `max_bytes`, `cdx_endpoint`, `wayback_replay_base`, `cc_indexes`.
 
+Short scripts that call this API are in [`examples/`](examples/README.md).
+
 ## Why this and not a one-off script
 
 | Approach | What it is good at | What you still have to build |
