@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/mohamd764/wayback-image-recovery/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamd764/wayback-image-recovery/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 
 Recover lost website images — or any other archived asset — from the [Internet Archive Wayback Machine](https://web.archive.org/) and [Common Crawl](https://commoncrawl.org/). Point it at a domain, a URL list, or a CSV of broken image links. It finds a real capture, downloads the original bytes, rejects HTML error pages and truncated files, and writes a manifest you can audit.
 
@@ -21,7 +21,7 @@ A CMS migration, a CDN path change, or an expired domain can make every image on
 
 ## Install
 
-Python 3.9 or newer.
+Python 3.10 or newer.
 
 ```bash
 pip install "git+https://github.com/mohamd764/wayback-image-recovery.git"
