@@ -6,6 +6,10 @@
 
 - Runnable `examples/` scripts for a URL list, a CSV of broken image URLs, and resuming a run.
 
+### Removed
+
+- Python 3.9 support. The minimum is now 3.10, and CI tests 3.10, 3.11, and 3.12. Python 3.9 reached end of life in October 2025, and `actions/setup-python` has no CPython 3.9 build for `ubuntu-latest` (Ubuntu 26.04), so that job failed before pytest ran.
+
 All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

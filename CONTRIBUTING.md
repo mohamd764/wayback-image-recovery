@@ -10,7 +10,7 @@ cd wayback-image-recovery
 python -m pip install -e ".[dev]"
 ```
 
-Python 3.9 through 3.12 are supported. Use a virtual environment if you are not already in one.
+Python 3.10 through 3.12 are supported. Use a virtual environment if you are not already in one.
 
 ## Checks
 

@@ -242,7 +242,9 @@ def _rows_from_table(data: list[object]) -> list[dict[str, str]]:
             continue
         if header is None:
             if len(row) == len(CDX_FIELDS):
-                parsed.append({key: str(value) for key, value in zip(CDX_FIELDS, row)})
+                parsed.append(
+                    {key: str(value) for key, value in zip(CDX_FIELDS, row, strict=False)}
+                )
             continue
         item = {header[index]: str(row[index]) for index in range(min(len(header), len(row)))}
         parsed.append(item)
